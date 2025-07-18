@@ -38,4 +38,9 @@ RUN mkdir -p /chatwoot/log
 EXPOSE 3000
 
 # Start the Rails app
-CMD ["bundle", "exec", "puma", "-C", "config/puma.rb"]
+CMD if [ "$RAILS_ROLE" = "web" ]; then \
+      bundle exec rake db:chatwoot_prepare && bundle exec puma -C config/puma.rb; \
+    else \
+      bundle exec sidekiq; \
+    fi
+
