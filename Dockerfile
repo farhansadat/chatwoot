@@ -32,6 +32,7 @@ RUN bundle install
 
 # Precompile frontend assets
 RUN bundle exec rake assets:precompile
+RUN mkdir -p /chatwoot/log
 
 # Expose port
 EXPOSE 3000
