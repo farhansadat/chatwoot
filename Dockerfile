@@ -1,7 +1,7 @@
-# Use the correct Ruby version
+# Use correct Ruby version
 FROM ruby:3.4.4
 
-# Install required dependencies
+# Install dependencies
 RUN apt-get update -qq && apt-get install -y \
   build-essential \
   libpq-dev \
@@ -9,29 +9,30 @@ RUN apt-get update -qq && apt-get install -y \
   git \
   curl \
   nodejs \
+  npm \
   yarn
 
-# Enable corepack and install pnpm (node is already included above)
-RUN corepack enable && corepack prepare pnpm@8.15.4 --activate
+# Install pnpm manually via npm (no corepack needed)
+RUN npm install -g pnpm@8.15.4
 
 # Set working directory
 WORKDIR /chatwoot
 
-# Copy code into the container
+# Copy project files
 COPY . .
 
 # Install the correct Bundler version
 RUN gem install bundler:2.5.16
 RUN bundle install
 
-# Precompile assets
+# Precompile Rails assets
 RUN bundle exec rake assets:precompile
 
-# ❗ Temporary: Run DB setup (migrate + seed)
+# TEMP: Set up DB (can be removed after first launch)
 RUN bundle exec rake db:chatwoot_prepare
 
-# Expose port that Puma uses
+# Expose port used by Puma
 EXPOSE 3000
 
-# Start Chatwoot server via Puma
+# Start Chatwoot server
 CMD ["bundle", "exec", "puma", "-C", "config/puma.rb"]
