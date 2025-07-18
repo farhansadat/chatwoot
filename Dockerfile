@@ -1,35 +1,38 @@
 FROM ruby:3.4.4
 
-# Install dependencies
+# Install OS dependencies
 RUN apt-get update -qq && apt-get install -y \
   build-essential \
   libpq-dev \
   libvips \
-  nodejs \
-  yarn \
+  curl \
   git \
-  curl
+  nodejs \
+  yarn
+
+# Enable corepack (included with Node.js) and install pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # Set working directory
 WORKDIR /chatwoot
 
-# Copy code
+# Copy application code
 COPY . .
 
-# Fix missing log dir
+# Fix log dir error
 RUN mkdir -p log
 
-# Use exact Bundler version that matches Gemfile.lock
+# Install correct bundler version
 RUN gem install bundler:2.5.16
 
-# Install gems
+# Install Ruby gems
 RUN bundle install
 
 # Precompile assets
 RUN bundle exec rake assets:precompile
 
-# Expose port
+# Expose default port
 EXPOSE 3000
 
-# Run the Rails server
+# Start Chatwoot server
 CMD ["bundle", "exec", "puma", "-C", "config/puma.rb"]
