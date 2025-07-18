@@ -10,18 +10,19 @@ RUN apt-get update -qq && apt-get install -y \
   git \
   curl
 
-# Install pnpm
-RUN curl -fsSL https://get.pnpm.io/install.sh | bash \
-  && export PATH="$HOME/.local/share/pnpm:$PATH"
-
 # Set working directory
 WORKDIR /chatwoot
 
 # Copy code
 COPY . .
 
-# Install correct bundler version
+# Fix missing log dir
+RUN mkdir -p log
+
+# Use exact Bundler version that matches Gemfile.lock
 RUN gem install bundler:2.5.16
+
+# Install gems
 RUN bundle install
 
 # Precompile assets
