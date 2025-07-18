@@ -1,46 +1,37 @@
+# Use the correct Ruby version
 FROM ruby:3.4.4
 
-# Install system dependencies
+# Install required dependencies
 RUN apt-get update -qq && apt-get install -y \
   build-essential \
   libpq-dev \
   libvips \
   git \
-  curl
+  curl \
+  nodejs \
+  yarn
 
-# Install Node.js 18 via NodeSource (includes corepack)
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
-  && apt-get install -y nodejs
-
-# Enable corepack and install pnpm & yarn
-RUN corepack enable && corepack prepare pnpm@8.15.4 --activate && corepack prepare yarn@1.22.19 --activate
+# Enable corepack and install pnpm (node is already included above)
+RUN corepack enable && corepack prepare pnpm@8.15.4 --activate
 
 # Set working directory
 WORKDIR /chatwoot
 
-# Copy code
+# Copy code into the container
 COPY . .
 
-# Create log directory
-RUN mkdir -p log
-
-# Install correct bundler version
+# Install the correct Bundler version
 RUN gem install bundler:2.5.16
-
-# Install Ruby dependencies
 RUN bundle install
 
-# Precompile frontend assets
+# Precompile assets
 RUN bundle exec rake assets:precompile
-RUN mkdir -p /chatwoot/log
 
-# Expose port
+# ❗ Temporary: Run DB setup (migrate + seed)
+RUN bundle exec rake db:chatwoot_prepare
+
+# Expose port that Puma uses
 EXPOSE 3000
 
-# Start the Rails app
-CMD if [ "$RAILS_ROLE" = "web" ]; then \
-      bundle exec rake db:chatwoot_prepare && bundle exec puma -C config/puma.rb; \
-    else \
-      bundle exec sidekiq; \
-    fi
-
+# Start Chatwoot server via Puma
+CMD ["bundle", "exec", "puma", "-C", "config/puma.rb"]
