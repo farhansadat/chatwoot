@@ -1,4 +1,4 @@
-FROM ruby:3.2
+FROM ruby:3.4.4
 
 # Install dependencies
 RUN apt-get update -qq && apt-get install -y \
@@ -16,8 +16,8 @@ WORKDIR /chatwoot
 COPY . .
 
 # Install correct bundler version
-RUN gem install bundler:2.4.22
-RUN bundle install
+RUN gem install bundler:2.5.16
+RUN bundle _2.5.16_ install
 
 # Precompile assets
 RUN bundle exec rake assets:precompile
