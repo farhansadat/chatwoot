@@ -6,26 +6,25 @@ RUN apt-get update -qq && apt-get install -y \
   libpq-dev \
   libvips \
   git \
-  curl \
-  yarn
+  curl
 
-# Install Node.js via NodeSource (includes corepack)
+# Install Node.js 18 via NodeSource (includes corepack)
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
   && apt-get install -y nodejs
 
-# Enable corepack and install pnpm
-RUN corepack enable && corepack prepare pnpm@8.15.4 --activate
+# Enable corepack and install pnpm & yarn
+RUN corepack enable && corepack prepare pnpm@8.15.4 --activate && corepack prepare yarn@1.22.19 --activate
 
 # Set working directory
 WORKDIR /chatwoot
 
-# Copy project files
+# Copy code
 COPY . .
 
-# Create missing log folder to avoid ENOENT
+# Create log directory
 RUN mkdir -p log
 
-# Install bundler version matching Gemfile.lock
+# Install correct bundler version
 RUN gem install bundler:2.5.16
 
 # Install Ruby dependencies
@@ -34,8 +33,8 @@ RUN bundle install
 # Precompile frontend assets
 RUN bundle exec rake assets:precompile
 
-# Expose default Rails port
+# Expose port
 EXPOSE 3000
 
-# Start the Puma server
+# Start the Rails app
 CMD ["bundle", "exec", "puma", "-C", "config/puma.rb"]
