@@ -7,7 +7,12 @@ RUN apt-get update -qq && apt-get install -y \
   libvips \
   nodejs \
   yarn \
-  git
+  git \
+  curl
+
+# Install pnpm
+RUN curl -fsSL https://get.pnpm.io/install.sh | bash \
+  && export PATH="$HOME/.local/share/pnpm:$PATH"
 
 # Set working directory
 WORKDIR /chatwoot
@@ -16,12 +21,8 @@ WORKDIR /chatwoot
 COPY . .
 
 # Install correct bundler version
-RUN gem install bundler:2.4.22
+RUN gem install bundler:2.5.16
 RUN bundle install
-
-# Create log and tmp folders
-RUN mkdir -p log tmp/pids tmp/cache tmp/sockets
-RUN touch log/development.log
 
 # Precompile assets
 RUN bundle exec rake assets:precompile
