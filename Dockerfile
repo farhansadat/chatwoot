@@ -1,33 +1,32 @@
 FROM ruby:3.4.4
 
-RUN apt-get update -qq && apt-get install -y \
+# Use alternative mirrors and install dependencies
+RUN apt-get update -o Acquire::ForceIPv4=true && apt-get install -y \
   build-essential \
   libpq-dev \
-  libvips \
+  libvips-dev \
   git \
   curl \
-  nodejs \
-  npm \
-  yarn
+  ca-certificates
 
-# Install pnpm safely via npm
-RUN npm install -g pnpm@8.15.4
+# Install Node.js 18, npm, yarn using NodeSource
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs && \
+    npm install -g yarn pnpm@8.15.4
 
+# Set working directory
 WORKDIR /chatwoot
 COPY . .
 
-# Create missing folders to avoid ENOENT errors
+# Create missing folders
 RUN mkdir -p log tmp/pids tmp/cache tmp/sockets public/uploads
 
-# Install gems
+# Install bundler and dependencies
 RUN gem install bundler:2.5.16
 RUN bundle install
 
-# Precompile frontend assets
+# Precompile assets
 RUN bundle exec rake assets:precompile
-
-# ⚠️ DO NOT RUN db:chatwoot_prepare in Dockerfile (run in console after deploy)
-# RUN bundle exec rake db:chatwoot_prepare
 
 EXPOSE 3000
 
